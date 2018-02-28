@@ -1,0 +1,22 @@
+{
+  "name": "progress-visualization",
+  "version": "1.0.0",
+  "description": "Data Visualization of Student Assessment Submission",
+  "main": "parse.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "chart.js": "^2.7.1",
+    "chartjs-node": "^1.6.1",
+    "fast-csv": "^2.4.1",
+    "moment": "^2.20.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node parse.js"
+  },
+  "author": "berto",
+  "license": "ISC"
+}
