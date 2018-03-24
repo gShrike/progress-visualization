@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 
-from bokeh.plotting import figure, show, output_file
+from bokeh.plotting import figure
+from bokeh.resources import CDN
+from bokeh.embed import file_html
 
 def format_data(students):
     data = dict(categories=[], maximums=[], minimums=[], q1_scores=[], q2_scores=[], q3_scores=[])
@@ -41,9 +43,8 @@ def draw(students, student):
     p.xaxis.major_label_text_font_size="8pt"
 
     # draw student line
-    if student:
+    if student and student in students:
         student_data = get_student_data(students[student])
         p.line(data['categories'][:len(student_data)], student_data, color='#FF822D')
     
-    output_file("boxplot.html", title="boxplot.py example")
-    show(p)
+    return file_html(p, CDN, "student assessment progress")

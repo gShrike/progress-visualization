@@ -1,0 +1,34 @@
+from flask import Flask, render_template, request, json, url_for
+from csv_parser import parse_csv
+from boxplot import draw
+
+STUDENT_PROGRESS_FILE = 'progress.csv'
+
+app = Flask(__name__)
+
+progress = parse_csv(STUDENT_PROGRESS_FILE)
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/students')
+def students():
+    students = [*progress['students']]
+    return app.response_class(
+        response=json.dumps(students),
+        status=200,
+        mimetype='application/json'
+    )
+
+@app.route('/graph')
+def graph():
+    student = request.args.get('student')
+    html = draw(progress['students'], student)
+    return html
+
+with app.test_request_context():
+    url_for('static', filename='app.js')
+
+if __name__ == '__main__':
+    app.run()
