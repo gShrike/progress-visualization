@@ -15,11 +15,14 @@ def format_data(students):
         data['q3_scores'].append(interval['median'] + interval['iqr'])
     return data
 
-def draw(students):
+def get_student_data(student):
+    return list(map(lambda interval: len(interval['assessments']), student['progress']))
+
+def draw(students, student):
     data = format_data(students) 
 
     p = figure(tools="save", background_fill_color="#F4F3FB", title="Student Assessment Progress", x_range=data['categories'])
-    
+
     # stems
     p.segment(data['categories'], data['maximums'], data['categories'], data['q3_scores'], line_color="black")
     p.segment(data['categories'], data['minimums'], data['categories'], data['q1_scores'], line_color="black")
@@ -36,7 +39,11 @@ def draw(students):
     p.ygrid.grid_line_color = "white"
     p.grid.grid_line_width = 2
     p.xaxis.major_label_text_font_size="8pt"
+
+    # draw student line
+    if student:
+        student_data = get_student_data(students[student])
+        p.line(data['categories'][:len(student_data)], student_data, color='#FF822D')
     
-    #  output_file("boxplot.html", title="boxplot.py example")
-    #
-    #  show(p)
+    output_file("boxplot.html", title="boxplot.py example")
+    show(p)
