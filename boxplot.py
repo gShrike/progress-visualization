@@ -13,13 +13,16 @@ background_color = '#F4F3FB'
 top_quartile_color = '#BE69CA'
 bottom_quartile_color = '#40977F'
 highlight_color = '#FF822D'
+second_highlight_color = '#2DE0FF'
 line_color = 'black'
 
 def format_data(students):
-    data = dict(categories=[], maximums=[], minimums=[], q1_scores=[], q2_scores=[], q3_scores=[], scatter_x=[], scatter_y=[])
+    data = dict(categories=[], maximums=[], minimums=[], q1_scores=[], q2_scores=[], q3_scores=[], scatter_x=[], scatter_y=[], x_values=[])
     total_intervals = 100/len(students['intervals'])
     for i, interval in enumerate(students['intervals']):
-        category = str(int(total_intervals * (i + 1))) + '%'
+        x = int(total_intervals * (i + 1))
+        category = str(x)
+        data['x_values'].append(x)
         data['categories'].append(category)
         if interval['median'] is not 0:
             data['q1_scores'].append(interval['q1'])
@@ -69,6 +72,13 @@ def generate_scatterplot(scatterplot, data):
     scatterplot.circle(data['scatter_x'], data['scatter_y'], size=10, color=top_quartile_color, alpha=0.5)
     return scatterplot
 
+def add_student_lines(plot, program_progress, student_data, student_best_fit_line):
+    plot.line(program_progress, student_data, color=highlight_color, legend='Progress')
+    plot.line(program_progress, student_best_fit_line, color=second_highlight_color, legend='Best Fit')
+
+    plot.legend.location = "top_left"
+    plot.legend.click_policy="hide"
+
 def draw(students, student):
     data = format_data(students) 
 
@@ -91,10 +101,16 @@ def draw(students, student):
     if student and student in students:
         student_data = get_student_data(students[student])
         program_progress = data['categories'][:len(student_data)]
-        scatterplot.line(program_progress, student_data, color=highlight_color)
-        boxplot.line(program_progress, student_data, color=highlight_color)
+        student_progress = data['x_values'][:len(student_data)]
+
+        student_best_fit_line = np.poly1d(np.polyfit(student_progress, student_data, 1))(student_progress)
+
+        add_student_lines(boxplot, program_progress, student_data, student_best_fit_line)
+        add_student_lines(scatterplot, program_progress, student_data, student_best_fit_line)
+
         table_data['student_standards'] = student_data
         columns.append(TableColumn(field="student_standards", title="Student Standards"))
+
 
     source = ColumnDataSource(table_data)
     data_table = DataTable(source=source, columns=columns, width=400, height=280)
