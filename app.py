@@ -1,9 +1,11 @@
+import os
 from flask import Flask, render_template, request, json, url_for
 from csv_parser import parse_csv
 from boxplot import draw
 
 STUDENT_PROGRESS_FILE = 'progress.csv'
 
+port = int(os.environ.get('PORT', 5000))
 app = Flask(__name__)
 
 progress = parse_csv(STUDENT_PROGRESS_FILE)
@@ -35,4 +37,4 @@ with app.test_request_context():
     url_for('static', filename='favicon.png')
 
 if __name__ == '__main__':
-    app.run(threaded=True)
+    app.run(host='0.0.0.0', port=port, threaded=True)
