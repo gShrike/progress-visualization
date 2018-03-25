@@ -15,6 +15,8 @@ def index():
 @app.route('/students')
 def students():
     students = [*progress['students']]
+    students.remove('intervals')
+    students.sort()
     return app.response_class(
         response=json.dumps(students),
         status=200,
