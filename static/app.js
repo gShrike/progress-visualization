@@ -32,10 +32,13 @@ function populateDropdown(students) {
   const container = document.querySelector('.dropdown')
   const dropdown = document.createElement('select')
   const selectOption = document.createElement('option')
+  const selectNoneOption = document.createElement('option')
   selectOption.innerText = 'Select Student'
+  selectNoneOption.innerText = '<<None>>'
   selectOption.setAttribute("disabled", "")
   selectOption.setAttribute("selected", "")
   dropdown.appendChild(selectOption)
+  dropdown.appendChild(selectNoneOption)
   dropdown.onchange = displayStudentLine
   students.forEach(student => {
     const option = document.createElement('option')
