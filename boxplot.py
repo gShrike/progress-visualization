@@ -1,9 +1,13 @@
 import numpy as np
 import pandas as pd
 
+from bokeh.io import curdoc
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from bokeh.embed import file_html
+from bokeh.layouts import column, widgetbox
+from bokeh.models import ColumnDataSource
+from bokeh.models.widgets import DataTable, TableColumn
 
 def format_data(students):
     data = dict(categories=[], maximums=[], minimums=[], q1_scores=[], q2_scores=[], q3_scores=[])
@@ -41,10 +45,32 @@ def draw(students, student):
     p.ygrid.grid_line_color = "white"
     p.grid.grid_line_width = 2
     p.xaxis.major_label_text_font_size="8pt"
+    p.xaxis.axis_label = '% Program'
+    p.yaxis.axis_label = '# Standards Completed'
+
+    table_data = dict(
+        progress=data['categories'],
+        standards=data['q2_scores'],
+    )
+    columns = [
+        TableColumn(field="progress", title="Progress"),
+        TableColumn(field="standards", title="Median Standards")
+    ]
 
     # draw student line
     if student and student in students:
         student_data = get_student_data(students[student])
-        p.line(data['categories'][:len(student_data)], student_data, color='#FF822D')
-    
-    return file_html(p, CDN, "student assessment progress")
+        program_progress = data['categories'][:len(student_data)]
+        p.line(program_progress, student_data, color='#FF822D')
+        table_data['student_standards'] = student_data
+        columns.append(TableColumn(field="student_standards", title="Student Standards"))
+
+    source = ColumnDataSource(table_data)
+    data_table = DataTable(source=source, columns=columns, width=400, height=280)
+    inputs = widgetbox(data_table)
+
+    curdoc().clear()
+    curdoc().add_root(column(p, inputs, width=1000))
+    curdoc().title = "Sliders"
+
+    return file_html(curdoc(), CDN, "student assessment progress")
