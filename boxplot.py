@@ -6,7 +6,7 @@ from bokeh.plotting import figure
 from bokeh.resources import CDN
 from bokeh.embed import file_html
 from bokeh.layouts import column, widgetbox
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.models.widgets import DataTable, TableColumn
 
 def format_data(students):
@@ -14,11 +14,18 @@ def format_data(students):
     total_intervals = 100/len(students['intervals'])
     for i, interval in enumerate(students['intervals']):
         data['categories'].append(str(int(total_intervals * (i + 1))) + '%')
-        data['maximums'].append(interval['q3'] + 1.5*interval['iqr'])
-        data['minimums'].append(interval['q1'] - 1.5*interval['iqr'])
-        data['q1_scores'].append(interval['median'] - interval['iqr'])
-        data['q2_scores'].append(interval['median'])
-        data['q3_scores'].append(interval['median'] + interval['iqr'])
+        if interval['median'] is not 0:
+            data['q1_scores'].append(interval['q1'])
+            data['q2_scores'].append(interval['median'])
+            data['q3_scores'].append(interval['q3'])
+            data['maximums'].append(interval['max'])
+            data['minimums'].append(interval['min'])
+        # Whisker at 1.5 IQR - Disabled
+        #  whisker_max = interval['q3'] + 1.5*interval['iqr']
+        #  whisker_min = interval['q1'] - 1.5*interval['iqr']
+        #  whisker_min = whisker_min if whisker_min > 0 else 0
+        #  data['maximums'].append(interval['max'] if interval['max'] > whisker_max else whisker_max)
+        #  data['minimums'].append(interval['min'] if interval['min'] < whisker_min else whisker_min)
     return data
 
 def get_student_data(student):
@@ -27,7 +34,11 @@ def get_student_data(student):
 def draw(students, student):
     data = format_data(students) 
 
-    p = figure(tools="save", background_fill_color="#F4F3FB", title="Student Assessment Progress", x_range=data['categories'])
+    hover = HoverTool(tooltips=[
+        ("Standards", "$y"),
+    ])
+
+    p = figure(tools=[hover,"save"], background_fill_color="#F4F3FB", title="Student Assessment Progress", x_range=data['categories'])
 
     # stems
     p.segment(data['categories'], data['maximums'], data['categories'], data['q3_scores'], line_color="black")
@@ -71,6 +82,5 @@ def draw(students, student):
 
     curdoc().clear()
     curdoc().add_root(column(p, inputs, width=1000))
-    curdoc().title = "Sliders"
 
     return file_html(curdoc(), CDN, "student assessment progress")
