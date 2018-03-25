@@ -20,6 +20,7 @@ function generateDropdown() {
 }
 
 function displayGraph(html) {
+  hideLoading()
   const doc = document.querySelector('iframe').contentWindow.document
   doc.open()
   doc.write(html)
@@ -27,9 +28,14 @@ function displayGraph(html) {
 }
 
 function populateDropdown(students) {
+  hideLoading()
   const container = document.querySelector('.dropdown')
-  container.innerHTML = ''
   const dropdown = document.createElement('select')
+  const selectOption = document.createElement('option')
+  selectOption.innerText = 'Select Student'
+  selectOption.setAttribute("disabled", "")
+  selectOption.setAttribute("selected", "")
+  dropdown.appendChild(selectOption)
   dropdown.onchange = displayStudentLine
   students.forEach(student => {
     const option = document.createElement('option')
@@ -37,9 +43,19 @@ function populateDropdown(students) {
     dropdown.appendChild(option)
   })
   container.append(dropdown)
-  console.log(students)
 }
 
 function displayStudentLine(event) {
+  displayLoading()
   generateGraph(event.target.value)
+}
+
+function displayLoading() {
+  const loading = document.querySelector('.loading')
+  loading.style.display = 'inline'
+}
+
+function hideLoading() {
+  const loading = document.querySelector('.loading')
+  loading.style.display = 'none'
 }

@@ -31,6 +31,8 @@ def graph():
 
 with app.test_request_context():
     url_for('static', filename='app.js')
+    url_for('static', filename='style.css')
+    url_for('static', filename='favicon.png')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(threaded=True)
