@@ -12,8 +12,10 @@ from bokeh.models.widgets import DataTable, TableColumn, Panel, Tabs
 background_color = '#F4F3FB'
 top_quartile_color = '#BE69CA'
 bottom_quartile_color = '#40977F'
-highlight_color = '#FF822D'
+highlight_color = '#5373F5'
 second_highlight_color = '#2DE0FF'
+third_highlight_color = '#FF0054'
+fourth_highlight_color = '#FF822D'
 line_color = 'black'
 
 def format_data(students):
@@ -72,14 +74,15 @@ def generate_scatterplot(scatterplot, data):
     scatterplot.circle(data['scatter_x'], data['scatter_y'], size=10, color=top_quartile_color, alpha=0.5)
     return scatterplot
 
-def add_student_lines(plot, program_progress, student_data, student_best_fit_line):
-    plot.line(program_progress, student_data, color=highlight_color, legend='Progress')
-    plot.line(program_progress, student_best_fit_line, color=second_highlight_color, legend='Best Fit')
+def add_student_lines(plot, student, school):
+    plot.line(student['program'], student['best_fit_line'], color=second_highlight_color, legend='Student Best Fit')
+    plot.line(school['program'], school['best_fit_line'], color=third_highlight_color, legend='School Best Fit')
+    plot.line(student['program'], student['data'], color=highlight_color, legend='Student Progress')
 
     plot.legend.location = "top_left"
-    plot.legend.click_policy="hide"
+    plot.legend.click_policy = "hide"
 
-def draw(students, student):
+def draw(students, name):
     data = format_data(students) 
 
     boxplot = generate_figure(data['categories'])
@@ -98,19 +101,26 @@ def draw(students, student):
     ]
 
     # draw student line
-    if student and student in students:
-        student_data = get_student_data(students[student])
-        program_progress = data['categories'][:len(student_data)]
-        student_progress = data['x_values'][:len(student_data)]
+    if name and name in students:
+        student = dict()
+        school = dict()
 
-        student_best_fit_line = np.poly1d(np.polyfit(student_progress, student_data, 1))(student_progress)
+        student['data'] = get_student_data(students[name])
+        student['program'] = data['categories'][:len(student['data'])]
+        student['progress'] = data['x_values'][:len(student['data'])]
 
-        add_student_lines(boxplot, program_progress, student_data, student_best_fit_line)
-        add_student_lines(scatterplot, program_progress, student_data, student_best_fit_line)
+        school['program'] = data['categories'][:len(data['x_values'])]
+        school['progress'] = data['x_values'][:len(data['q2_scores'])]
 
-        table_data['student_standards'] = student_data
+        student['best_fit_line'] = np.poly1d(np.polyfit(student['progress'], student['data'], 1))(student['progress'])
+        school['best_fit_line'] = np.poly1d(np.polyfit(school['progress'], data['q2_scores'], 1))(school['progress'])
+
+
+        add_student_lines(boxplot, student, school)
+        add_student_lines(scatterplot, student, school)
+
+        table_data['student_standards'] = student['data']
         columns.append(TableColumn(field="student_standards", title="Student Standards"))
-
 
     source = ColumnDataSource(table_data)
     data_table = DataTable(source=source, columns=columns, width=400, height=280)
