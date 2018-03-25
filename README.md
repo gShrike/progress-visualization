@@ -12,7 +12,14 @@ As a stretch, taking a median average is OK, but what I'd _really_ like to see i
 - [x] job number two is being to plot a particular student's progress *against* that line
 what was the path they took, and are they current above the median or below the median? How far above and below?
 
-- [] job number three is being able to adjust the end date for a student and repaint their curve accordingly
+- [x] job number three is being able to adjust the end date for a student and repaint their curve accordingly
 we want to be able to play with the end date to see if that puts them above the curve, so we can better calculate extensions
-  - find scatterplot equation for main line and student line
-  - extend y axis, calculate collision, etc
+
+## Concerns
+
+- Start and end date are not completely accurate. They are based on first drill submission (pass or fail) and six months after that (does not exclude holidays).
+- Outliers are not removed. Whiskers extend to the max and min value.
+- Data is static from 3/23/2018. Future implementation involves pulling the data directly from the excel sheet (g70 progress).
+- Extension graph is looking at the best fit line, not curve.
+
+![demo](./static/demo.png)

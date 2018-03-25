@@ -1,11 +1,12 @@
 import os
+
 from flask import Flask, render_template, request, json, url_for
-from csv_parser import parse_csv
 from boxplot import draw
 
-STUDENT_PROGRESS_FILE = 'progress.csv'
+from csv_parser import parse_csv
+from constants import STUDENT_PROGRESS_FILE, PORT
 
-port = int(os.environ.get('PORT', 5000))
+port = int(os.environ.get('PORT', PORT))
 app = Flask(__name__)
 
 progress = parse_csv(STUDENT_PROGRESS_FILE)

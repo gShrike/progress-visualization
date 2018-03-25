@@ -1,11 +1,9 @@
 import csv
-from datetime import datetime, timedelta
-import numpy as np
 
-PROGRAM_DAYS = 180
-PROGRESS_INTERVALS = 5
-TOTAL_INTERVALS = int(100/PROGRESS_INTERVALS)
-DAY_INTERVALS = int(PROGRAM_DAYS/TOTAL_INTERVALS)
+import numpy as np
+from datetime import datetime, timedelta
+
+from constants import TOTAL_INTERVALS, DAY_INTERVALS
 
 def group_student_completed_assessments(progress, row):
     date = row[0] 
