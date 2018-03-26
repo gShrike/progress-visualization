@@ -18,7 +18,7 @@ def group_student_completed_assessments(progress, row):
     if name not in progress['students']:
         students[name] = dict(start_date=date, end_date=date, assessments=dict())
     student = students[name]
-    if passed and assessment not in student['assessments']:
+    if passed == 'TRUE' and assessment not in student['assessments']:
         student['assessments'][assessment] = date
     if student['end_date'] < date:
         student['end_date'] = date
