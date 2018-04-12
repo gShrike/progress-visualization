@@ -33,6 +33,7 @@ def graph():
     return html
 
 with app.test_request_context():
+    url_for('static', filename='lz-string.js')
     url_for('static', filename='app.js')
     url_for('static', filename='style.css')
     url_for('static', filename='favicon.png')

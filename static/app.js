@@ -1,22 +1,47 @@
-generateGraph()
-generateDropdown()
+const SUBMISSIONS_URL = 'https://galvanize-tir-api.herokuapp.com/submissions'
+let student = getUrlStudent()
+let cache
 
-function generateGraph(student) {
+getSubmissions()
+  .then(getGraphData)
+  .then(displayGraph)
+  .then(getStudents)
+  .then(populateDropdown)
+  .catch(displayError)
+
+function getSubmissions() {
+  const storedSubmissions = localStorage.getItem('submissions')
+  if (storedSubmissions) {
+    cache = JSON.parse(storedSubmissions)
+    displayDataDate(cache.date)
+    cache.data = LZString.decompress(cache.data)
+    return Promise.resolve()
+  } else {
+    return fetch(SUBMISSIONS_URL)
+      .then(data => data.json())
+      .then(data => {
+        const compressed = LZString.compress(JSON.stringify(data));
+        cache = { data: compressed, date: new Date() }
+        localStorage.setItem('submissions', JSON.stringify(cache))
+      })
+  }
+}
+
+function displayDataDate(date) {
+  // TODO: display date variable to html
+  console.log(date)
+}
+
+function getGraphData() {
   let url = '/graph'
   if (student) {
     url = `${url}?student=${student}`
   }
-  fetch(url)
-    .then(data => data.text())
-    .then(displayGraph)
-    .catch(console.error)
+  return fetch(url).then(data => data.text())
 }
 
-function generateDropdown() {
-  fetch('/students')
-    .then(data => data.json())
-    .then(populateDropdown)
-    .catch(console.error)
+function getStudents() {
+  return fetch('/students').then(data => data.json())
 }
 
 function displayGraph(html) {
@@ -50,7 +75,10 @@ function populateDropdown(students) {
 
 function displayStudentLine(event) {
   displayLoading()
-  generateGraph(event.target.value)
+  setCurrentStudent(event.target.value)
+  getGraphData()
+    .then(displayGraph)
+    .catch(displayError)
 }
 
 function displayLoading() {
@@ -61,4 +89,18 @@ function displayLoading() {
 function hideLoading() {
   const loading = document.querySelector('.loading')
   loading.style.display = 'none'
+}
+
+function setCurrentStudent(selectedStudent) {
+  student = selectedStudent
+  // TODO: change url to current student
+}
+
+function getUrlStudent() {
+  // TODO: set student from url with setCurrentStudent
+}
+
+function displayError(error) {
+  // TODO: display error message
+  console.error(error)  
 }
