@@ -20,6 +20,8 @@ third_highlight_color = '#FF0054'
 fourth_highlight_color = '#FF822D'
 line_color = 'black'
 
+line_width = 6
+
 def format_data(students):
     data = dict(categories=[], maximums=[], minimums=[], q1_scores=[], q2_scores=[], q3_scores=[], scatter_x=[], scatter_y=[], percentage=[])
     student_total_intervals = DISPLAY_PERCENTAGE/len(students['intervals'])
@@ -73,10 +75,10 @@ def generate_scatterplot(scatterplot, data):
     return scatterplot
 
 def add_lines(plot, student, school, addProgress):
-    plot.line(student['program'], student['best_fit_line'], color=second_highlight_color, legend='Student Best Fit')
-    plot.line(school['program'], school['best_fit_line'], color=third_highlight_color, legend='School Best Fit')
+    plot.line(student['program'], student['best_fit_line'], line_width=line_width, color=second_highlight_color, legend='Student Best Fit')
+    plot.line(school['program'], school['best_fit_line'], line_width=line_width, color=third_highlight_color, legend='School Best Fit')
     if addProgress:
-        plot.line(student['program'], student['data'], color=highlight_color, legend='Student Progress')
+        plot.line(student['program'], student['data'], line_width=line_width, color=highlight_color, legend='Student Progress')
 
     plot.legend.location = 'top_left'
     plot.legend.click_policy = 'hide'

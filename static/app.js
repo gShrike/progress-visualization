@@ -84,7 +84,7 @@ function getStudents() {
 
 function displayGraph(html) {
   hideLoading()
-  if (student.fullName) {
+  if (student.startDate) {
     displayDates(student)
   }
   const doc = document.querySelector('iframe').contentWindow.document

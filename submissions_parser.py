@@ -28,10 +28,10 @@ def group_student_assessment_into_intervals(students):
         student = students[name]
         date = student['start_date']
         for i in range(TOTAL_INTERVALS):
-            progress_intervals.append(dict(date=date, assessments=[]))
             date = date + timedelta(days=DAY_INTERVALS)
-            if date > student['end_date']:
+            if date >= datetime.now():
                 break
+            progress_intervals.append(dict(date=date, assessments=[]))
         for assessment in student['assessments']:
             assessment_date = student['assessments'][assessment]
             for interval in progress_intervals:
