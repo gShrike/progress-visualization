@@ -78,7 +78,7 @@ def add_lines(plot, student, school, addProgress):
     plot.line(student['program'], student['best_fit_line'], line_width=line_width, color=second_highlight_color, legend='Student Best Fit')
     plot.line(school['program'], school['best_fit_line'], line_width=line_width, color=third_highlight_color, legend='School Best Fit')
     if addProgress:
-        plot.line(student['program'], student['data'], line_width=line_width, color=highlight_color, legend='Student Progress')
+        plot.line(student['program_to_date'], student['data'], line_width=line_width, color=highlight_color, legend='Student Progress')
 
     plot.legend.location = 'top_left'
     plot.legend.click_policy = 'hide'
@@ -88,7 +88,8 @@ def get_line_information(data, students, name):
     school = dict()
     
     student['data'] = get_student_data(students[name])
-    student['program'] = data['categories'][:len(student['data'])]
+    student['program'] = data['categories']
+    student['program_to_date'] = data['categories'][:len(student['data'])]
     student['progress'] = data['percentage'][:len(student['data'])]
     
     school['program'] = data['categories'][:len(data['percentage'])]
@@ -97,8 +98,8 @@ def get_line_information(data, students, name):
     student['polynomial'] = np.polyfit(student['progress'], student['data'], 1)
     school['polynomial'] = np.polyfit(school['progress'], data['q2_scores'], 1)
 
-    student['best_fit_line'] = np.poly1d(student['polynomial'])(student['progress'])
-    school['best_fit_line'] = np.poly1d(school['polynomial'])(school['progress'])
+    student['best_fit_line'] = np.poly1d(student['polynomial'])(data['percentage'])
+    school['best_fit_line'] = np.poly1d(school['polynomial'])(data['percentage'])
 
     return student, school
 

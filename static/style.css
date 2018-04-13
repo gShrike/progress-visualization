@@ -21,6 +21,7 @@ nav {
 }
 
 .start-date, .end-date {
+  display: none;
   padding-left: 1em;
 }
 

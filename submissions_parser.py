@@ -3,7 +3,7 @@ import json
 import numpy as np
 from datetime import datetime, timedelta
 
-from constants import TOTAL_INTERVALS, DAY_INTERVALS
+from constants import TOTAL_INTERVALS
 
 def group_student_completed_assessments(progress, submission):
     date = submission['date']
@@ -26,12 +26,13 @@ def group_student_assessment_into_intervals(students):
     for name in students:
         progress_intervals = [] 
         student = students[name]
-        date = student['start_date']
+        day_intervals = (student['end_date'] - student['start_date']).days / TOTAL_INTERVALS 
+        current_date = student['start_date']
         for i in range(TOTAL_INTERVALS):
-            date = date + timedelta(days=DAY_INTERVALS)
-            if date >= datetime.now():
+            current_date = current_date + timedelta(days=day_intervals)
+            if current_date >= datetime.now():
                 break
-            progress_intervals.append(dict(date=date, assessments=[]))
+            progress_intervals.append(dict(date=current_date, assessments=[]))
         for assessment in student['assessments']:
             assessment_date = student['assessments'][assessment]
             for interval in progress_intervals:

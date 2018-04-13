@@ -5,6 +5,7 @@ const reloadButton = document.querySelector('.reload')
 const loading = document.querySelector('.loading')
 const startDate = document.querySelector('.start-date')
 const endDate = document.querySelector('.end-date')
+const endDatePicker = document.querySelector('.end-date input')
 
 let student = {}
 let cache
@@ -78,7 +79,7 @@ function getStudents() {
         .filter(student => student.role === 'student')
         .filter(student => student.startDate && student.endDate)
         .map(({fullName, startDate, endDate}) => ({fullName, startDate, endDate}))
-        .sort((a, b) => a.fullName > b.fullName)
+        .sort((a, b) => a.fullName > b.fullName ? 1 : a.fullName < b. fullName ? -1 : 0)
     })
 }
 
@@ -147,7 +148,7 @@ function displayDates(student) {
   startDate.style.display = 'inline'
   endDate.style.display = 'inline'
   startDate.innerHTML = `<strong>Start</strong>: ${new Date(student.startDate).toDateString()}`
-  endDate.innerHTML = `<strong>End</strong>: ${new Date(student.endDate).toDateString()}`
+  endDatePicker.valueAsDate = new Date(student.endDate)
 }
 
 function hideDates() {

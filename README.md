@@ -20,10 +20,11 @@ we want to be able to play with the end date to see if that puts them above the 
 - App pulls drill submissions from API rather than local file
 - Start and end date are now accurate from API 
 - Line size incremented
+- Line can be toggled by clicking on legend
 - Date picker added to predict student progress
+  - no one gets to 100
   - modify request to include an end date
   - if sent, display new line with modified date
   - depricate extension tab
-- Create release notes
 
 ![demo](./static/demo.png)
