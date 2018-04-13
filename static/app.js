@@ -2,8 +2,12 @@ const SUBMISSIONS_URL = 'https://galvanize-tir-api.herokuapp.com/submissions'
 const STUDENTS_URL = 'https://galvanize-tir-api.herokuapp.com/students'
 const nonePlaceholder = '<<None>>'
 const reloadButton = document.querySelector('.reload')
+const loading = document.querySelector('.loading')
+const startDate = document.querySelector('.start-date')
+const endDate = document.querySelector('.end-date')
 
-let student, cache
+let student = {}
+let cache
 
 setUrlStudent()
 
@@ -45,15 +49,15 @@ function reloadData() {
 }
 
 function displayDataDate(date) {
-  document.querySelector('.cache').innerHTML = `Data Cached: ${date}`
+  document.querySelector('.cache').innerHTML = `<strong>Data Cached</strong>: ${date}`
 }
 
 function getGraphData() {
-  document.querySelector('.loading').innerText = 'loading graph...'
+  loading.innerText = 'loading graph...'
   reloadButton.style.display = 'inline'
   let url = '/graph'
-  if (student) {
-    url = `${url}?student=${student}`
+  if (student.fullName) {
+    url = `${url}?student=${student.fullName}`
   }
   const information = {
     method: 'POST',
@@ -66,20 +70,23 @@ function getGraphData() {
 }
 
 function getStudents() {
-  document.querySelector('.loading').innerText = 'loading dropdown...'
+  loading.innerText = 'loading dropdown...'
   return fetch(STUDENTS_URL)
     .then(data => data.json())
     .then(response => {
       return response.students
         .filter(student => student.role === 'student')
         .filter(student => student.startDate && student.endDate)
-        .map(student => student.fullName)
-        .sort()
+        .map(({fullName, startDate, endDate}) => ({fullName, startDate, endDate}))
+        .sort((a, b) => a.fullName > b.fullName)
     })
 }
 
 function displayGraph(html) {
   hideLoading()
+  if (student.fullName) {
+    displayDates(student)
+  }
   const doc = document.querySelector('iframe').contentWindow.document
   doc.open()
   doc.write(html)
@@ -95,17 +102,19 @@ function populateDropdown(students) {
   selectOption.innerText = 'Select Student'
   selectNoneOption.innerText = nonePlaceholder
   selectOption.setAttribute('disabled', '')
-  if (!student) {
+  if (!student.fullName) {
     selectOption.setAttribute('selected', '')
   }
   dropdown.appendChild(selectOption)
   dropdown.appendChild(selectNoneOption)
   dropdown.onchange = displayStudentLine
-  students.forEach(name => {
+  students.forEach(currentStudent => {
     const option = document.createElement('option')
-    option.innerText = name
-    if (student === name) {
+    option.innerText = currentStudent.fullName
+    option.setAttribute('value', JSON.stringify(currentStudent))
+    if (student.fullName === currentStudent.fullName) {
       option.setAttribute('selected', '')
+      displayDates(currentStudent)
     }
     dropdown.appendChild(option)
   })
@@ -113,6 +122,7 @@ function populateDropdown(students) {
 }
 
 function displayStudentLine(event) {
+  hideDates()
   displayLoading()
   setCurrentStudent(event.target.value)
   getGraphData()
@@ -121,22 +131,32 @@ function displayStudentLine(event) {
 }
 
 function displayLoading() {
-  const loading = document.querySelector('.loading')
   loading.style.display = 'inline'
 }
 
 function hideLoading() {
-  const loading = document.querySelector('.loading')
   loading.style.display = 'none'
 }
 
 function setCurrentStudent(selectedStudent) {
-  student = selectedStudent === nonePlaceholder ? '' : selectedStudent
-  updateQueryStringParameter('student', student)
+  student = selectedStudent === nonePlaceholder ? '' : JSON.parse(selectedStudent)
+  updateQueryStringParameter('student', student.fullName)
+}
+
+function displayDates(student) {
+  startDate.style.display = 'inline'
+  endDate.style.display = 'inline'
+  startDate.innerHTML = `<strong>Start</strong>: ${new Date(student.startDate).toDateString()}`
+  endDate.innerHTML = `<strong>End</strong>: ${new Date(student.endDate).toDateString()}`
+}
+
+function hideDates() {
+  startDate.style.display = 'none'
+  endDate.style.display = 'none'
 }
 
 function setUrlStudent() {
-  student = getParameterByName('student')
+  student.fullName = getParameterByName('student')
 }
 
 function displayError(error) {
@@ -161,7 +181,7 @@ function updateQueryStringParameter(key, value) {
       params = urlQueryString + '&' + newParam
     }
   }
-  window.history.replaceState({}, '', baseUrl + params)
+  window.history.pushState({}, '', baseUrl + params)
 }
 
 function getParameterByName(name) {

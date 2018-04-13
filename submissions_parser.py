@@ -5,23 +5,22 @@ from datetime import datetime, timedelta
 
 from constants import TOTAL_INTERVALS, DAY_INTERVALS
 
-def group_student_completed_assessments(progress, row):
-    date = row['date']
-    name = row['studentName']
-    assessment = row['standardDescription']
-    passed = row['didPass']
-    if not name or not assessment or not date.strip():
-        progress['invalid_records'].append(row)
+def group_student_completed_assessments(progress, submission):
+    date = submission['date']
+    name = submission['studentName']
+    assessment = submission['standardDescription']
+    if not name or not assessment or not date.strip() or 'startDate' not in submission:
+        progress['invalid_records'].append(submission)
         return
     date = datetime.strptime(date, '%m/%d/%Y %H:%M:%S')
     students = progress['students']
     if name not in students:
-        students[name] = dict(start_date=date, end_date=date, assessments=dict())
+        start_date = datetime.strptime(submission['startDate'], '%Y-%m-%d')
+        end_date = datetime.strptime(submission['endDate'], '%Y-%m-%d')
+        students[name] = dict(start_date=start_date, end_date=end_date, assessments=dict())
     student = students[name]
-    if passed == 'TRUE' and assessment not in student['assessments']:
+    if submission['didPass'] == 'TRUE' and assessment not in student['assessments']:
         student['assessments'][assessment] = date
-    if student['end_date'] < date:
-        student['end_date'] = date
 
 def group_student_assessment_into_intervals(students):
     for name in students:
@@ -63,10 +62,10 @@ def aggregate_student_intervals(students):
     students['intervals'] = intervals
 
 def parse_json(data):
-    reader = json.loads(data.decode())
+    submissions = json.loads(data.decode())
     progress = dict(students=dict(), invalid_records=[])
-    for row in reader[1:]:
-        group_student_completed_assessments(progress, row)
+    for submission in submissions:
+        group_student_completed_assessments(progress, submission)
     group_student_assessment_into_intervals(progress['students'])
     aggregate_student_intervals(progress['students'])
     return progress

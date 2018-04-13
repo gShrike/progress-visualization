@@ -18,18 +18,7 @@ we want to be able to play with the end date to see if that puts them above the 
 ## V2
 
 - App pulls drill submissions from API rather than local file
-  - remove local file
-  - have client request data
-  - display proper loading message
-  - refactor server to use data from client (not local file)
-  - create cache
-  - allow for reload
 - Start and end date are now accurate from API 
-  - use data from api
-  - display start and end date for student
-  - modify url to display selected student
-    - change when dropdown is selected
-    - load when a student is selected
 - Line size incremented
 - Date picker added to predict student progress
   - modify request to include an end date
