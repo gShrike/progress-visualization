@@ -1,6 +1,12 @@
 const SUBMISSIONS_URL = 'https://galvanize-tir-api.herokuapp.com/submissions'
-let student = getUrlStudent()
-let cache
+const nonePlaceholder = '<<None>>'
+const reloadButton = document.querySelector('.reload')
+
+let student, cache
+
+setUrlStudent()
+
+reloadButton.addEventListener('click', reloadData)
 
 getSubmissions()
   .then(getGraphData)
@@ -14,25 +20,36 @@ function getSubmissions() {
   if (storedSubmissions) {
     cache = JSON.parse(storedSubmissions)
     displayDataDate(cache.date)
-    cache.data = LZString.decompress(cache.data)
-    return Promise.resolve()
+    try {
+      cache.data = LZString.decompress(cache.data)
+      return Promise.resolve()
+    } catch(error) {
+      return Promise.reject(error)
+    }
   } else {
     return fetch(SUBMISSIONS_URL)
       .then(data => data.json())
       .then(data => {
         const compressed = LZString.compress(JSON.stringify(data));
-        cache = { data: compressed, date: new Date() }
+        cache = { data: compressed, date: new Date().toDateString() }
+        displayDataDate(cache.date)
         localStorage.setItem('submissions', JSON.stringify(cache))
       })
   }
 }
 
+function reloadData() {
+  localStorage.clear()
+  window.location.reload()
+}
+
 function displayDataDate(date) {
-  // TODO: display date variable to html
-  console.log(date)
+  document.querySelector('.cache').innerHTML = `Data Cached: ${date}`
 }
 
 function getGraphData() {
+  document.querySelector('.loading').innerText = 'loading graph...'
+  reloadButton.style.display = 'inline'
   let url = '/graph'
   if (student) {
     url = `${url}?student=${student}`
@@ -41,6 +58,7 @@ function getGraphData() {
 }
 
 function getStudents() {
+  document.querySelector('.loading').innerText = 'loading dropdown...'
   return fetch('/students').then(data => data.json())
 }
 
@@ -59,15 +77,20 @@ function populateDropdown(students) {
   const selectOption = document.createElement('option')
   const selectNoneOption = document.createElement('option')
   selectOption.innerText = 'Select Student'
-  selectNoneOption.innerText = '<<None>>'
-  selectOption.setAttribute("disabled", "")
-  selectOption.setAttribute("selected", "")
+  selectNoneOption.innerText = nonePlaceholder
+  selectOption.setAttribute('disabled', '')
+  if (!student) {
+    selectOption.setAttribute('selected', '')
+  }
   dropdown.appendChild(selectOption)
   dropdown.appendChild(selectNoneOption)
   dropdown.onchange = displayStudentLine
-  students.forEach(student => {
+  students.forEach(name => {
     const option = document.createElement('option')
-    option.innerText = student
+    option.innerText = name
+    if (student === name) {
+      option.setAttribute('selected', '')
+    }
     dropdown.appendChild(option)
   })
   container.append(dropdown)
@@ -92,15 +115,40 @@ function hideLoading() {
 }
 
 function setCurrentStudent(selectedStudent) {
-  student = selectedStudent
-  // TODO: change url to current student
+  student = selectedStudent === nonePlaceholder ? '' : selectedStudent
+  updateQueryStringParameter('student', student)
 }
 
-function getUrlStudent() {
-  // TODO: set student from url with setCurrentStudent
+function setUrlStudent() {
+  student = getParameterByName('student')
 }
 
 function displayError(error) {
-  // TODO: display error message
+  document.querySelector('.error').style.display = 'inline'
   console.error(error)  
+}
+
+function updateQueryStringParameter(key, value) {
+  const baseUrl = [location.protocol, '//', location.host, location.pathname].join('')
+  const urlQueryString = document.location.search
+  const newParam = key + '=' + value
+  let params = '?' + newParam
+
+  if (urlQueryString) {
+    updateRegex = new RegExp('([\?&])' + key + '[^&]*')
+    removeRegex = new RegExp('([\?&])' + key + '=[^&;]+[&;]?')
+    if( typeof value == 'undefined' || value == null || value == '' ) {
+      params = ''
+    } else if (urlQueryString.match(updateRegex) !== null) {
+      params = urlQueryString.replace(updateRegex, '$1' + newParam)
+    } else { 
+      params = urlQueryString + '&' + newParam
+    }
+  }
+  window.history.replaceState({}, '', baseUrl + params)
+}
+
+function getParameterByName(name) {
+  const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+  return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
 }

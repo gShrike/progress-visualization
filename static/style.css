@@ -2,8 +2,23 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-.dropdown {
+header p {
   display: inline;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reload {
+  display: none;
+}
+
+.error {
+  display: none;
+  color: red;
 }
 
 iframe {
