@@ -3,32 +3,20 @@ import os
 from flask import Flask, render_template, request, json, url_for
 from boxplot import draw
 
-from csv_parser import parse_csv
-from constants import STUDENT_PROGRESS_FILE, PORT
+from submissions_parser import parse_json
+from constants import PORT
 
 port = int(os.environ.get('PORT', PORT))
 app = Flask(__name__)
-
-progress = parse_csv(STUDENT_PROGRESS_FILE)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/students')
-def students():
-    students = [*progress['students']]
-    students.remove('intervals')
-    students.sort()
-    return app.response_class(
-        response=json.dumps(students),
-        status=200,
-        mimetype='application/json'
-    )
-
-@app.route('/graph')
+@app.route('/graph', methods=['POST'])
 def graph():
     student = request.args.get('student')
+    progress = parse_json(request.data)
     html = draw(progress['students'], student)
     return html
 

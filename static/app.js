@@ -1,4 +1,5 @@
 const SUBMISSIONS_URL = 'https://galvanize-tir-api.herokuapp.com/submissions'
+const STUDENTS_URL = 'https://galvanize-tir-api.herokuapp.com/students'
 const nonePlaceholder = '<<None>>'
 const reloadButton = document.querySelector('.reload')
 
@@ -30,7 +31,7 @@ function getSubmissions() {
     return fetch(SUBMISSIONS_URL)
       .then(data => data.json())
       .then(data => {
-        const compressed = LZString.compress(JSON.stringify(data));
+        const compressed = LZString.compress(JSON.stringify(data.submissions));
         cache = { data: compressed, date: new Date().toDateString() }
         displayDataDate(cache.date)
         localStorage.setItem('submissions', JSON.stringify(cache))
@@ -54,12 +55,27 @@ function getGraphData() {
   if (student) {
     url = `${url}?student=${student}`
   }
-  return fetch(url).then(data => data.text())
+  const information = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain'
+    },
+    body: cache.data
+  }
+  return fetch(url, information).then(data => data.text())
 }
 
 function getStudents() {
   document.querySelector('.loading').innerText = 'loading dropdown...'
-  return fetch('/students').then(data => data.json())
+  return fetch(STUDENTS_URL)
+    .then(data => data.json())
+    .then(response => {
+      return response.students
+        .filter(student => student.role === 'student')
+        .filter(student => student.startDate && student.endDate)
+        .map(student => student.fullName)
+        .sort()
+    })
 }
 
 function displayGraph(html) {
