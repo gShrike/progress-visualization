@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
 
@@ -8,8 +10,6 @@ from bokeh.embed import file_html
 from bokeh.layouts import column, widgetbox
 from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.models.widgets import DataTable, TableColumn, Panel, Tabs
-
-from constants import PROGRESS_INTERVALS, DISPLAY_PERCENTAGE
 
 background_color = '#F4F3FB'
 top_quartile_color = '#BE69CA'
@@ -24,7 +24,7 @@ line_width = 6
 
 def format_data(students):
     data = dict(categories=[], maximums=[], minimums=[], q1_scores=[], q2_scores=[], q3_scores=[], scatter_x=[], scatter_y=[], percentage=[])
-    student_total_intervals = DISPLAY_PERCENTAGE/len(students['intervals'])
+    student_total_intervals = 100/len(students['intervals'])
     for i, interval in enumerate(students['intervals']):
         student_percentage = int(student_total_intervals * (i + 1))
         category = str(student_percentage)
@@ -74,20 +74,38 @@ def generate_scatterplot(scatterplot, data):
     scatterplot.circle(data['scatter_x'], data['scatter_y'], size=10, color=top_quartile_color, alpha=0.5)
     return scatterplot
 
-def add_lines(plot, student, school, addProgress):
+def add_lines(plot, student, school):
     plot.line(student['program'], student['best_fit_line'], line_width=line_width, color=second_highlight_color, legend='Student Best Fit')
     plot.line(school['program'], school['best_fit_line'], line_width=line_width, color=third_highlight_color, legend='School Best Fit')
-    if addProgress:
-        plot.line(student['program_to_date'], student['data'], line_width=line_width, color=highlight_color, legend='Student Progress')
+    plot.line(student['program_to_date'], student['data'], line_width=line_width, color=highlight_color, legend='Student Progress')
 
     plot.legend.location = 'top_left'
     plot.legend.click_policy = 'hide'
 
-def get_line_information(data, students, name):
+def get_line_information(data, students, name, end_date, total_intervals):
     student = dict()
     school = dict()
+
+    if end_date == 'FALSE':
+        student['data'] = get_student_data(students[name])
+    else:
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        start_date = students[name]['start_date']
+        previous_end_date = students[name]['end_date']
+        progress_intervals = []
+        day_intervals = (end_date - start_date).days / total_intervals
+        current_date = start_date
+        for _ in range(total_intervals):
+            current_date = current_date + timedelta(days=day_intervals)
+            if current_date > datetime.now() or current_date > previous_end_date:
+                break
+            progress_intervals.append(dict(date=current_date, count=0))
+        for interval in students[name]['progress']:
+            for new_interval in progress_intervals:
+                if interval['date'] <= new_interval['date']:
+                    new_interval['count'] = len(interval['assessments'])
+        student['data'] = list(map(lambda interval: interval['count'], progress_intervals))
     
-    student['data'] = get_student_data(students[name])
     student['program'] = data['categories']
     student['program_to_date'] = data['categories'][:len(student['data'])]
     student['progress'] = data['percentage'][:len(student['data'])]
@@ -103,21 +121,7 @@ def get_line_information(data, students, name):
 
     return student, school
 
-def generate_extended_boxplot(data, student, school):
-    extended_categories = list(data['percentage'])
-    for i in range(10):
-        extended_categories.append(int(PROGRESS_INTERVALS * (i + 1) + DISPLAY_PERCENTAGE))
-    student['progress'] = list(map(lambda x: str(x), extended_categories))
-    extended_boxplot = generate_figure(student['progress'])
-    generate_boxplot(extended_boxplot, data)
-
-    student['best_fit_line'] = np.poly1d(student['polynomial'])(extended_categories)
-    student['program'] = student['progress']
-    add_lines(extended_boxplot, student, school, False)
-
-    return extended_boxplot
-
-def draw(students, name):
+def draw(students, name, end_date, intervals):
     data = format_data(students) 
 
     boxplot = generate_figure(data['categories'])
@@ -142,18 +146,13 @@ def draw(students, name):
 
     # draw student line
     if name and name in students:
-        student, school = get_line_information(data, students, name)
+        student, school = get_line_information(data, students, name, end_date, intervals)
 
-        add_lines(boxplot, student, school, True)
-        add_lines(scatterplot, student, school, True)
+        add_lines(boxplot, student, school)
+        add_lines(scatterplot, student, school)
 
         table_data['student_standards'] = student['data']
         columns.append(TableColumn(field='student_standards', title='Student Standards'))
-
-        extended_boxplot = generate_extended_boxplot(data, student, school)
-        tab3 = Panel(child=extended_boxplot, title='Extension')
-        tabs.append(tab3)
-
 
     source = ColumnDataSource(table_data)
     data_table = DataTable(source=source, columns=columns, width=400, height=280)

@@ -8,11 +8,13 @@ const endDate = document.querySelector('.end-date')
 const endDatePicker = document.querySelector('.end-date input')
 
 let student = {}
+let modifiedEndDate = 'FALSE'
 let cache
 
 setUrlStudent()
 
 reloadButton.addEventListener('click', reloadData)
+endDatePicker.addEventListener('change', changeEndDate)
 
 getSubmissions()
   .then(getGraphData)
@@ -44,6 +46,14 @@ function getSubmissions() {
   }
 }
 
+function changeEndDate(event) {
+  modifiedEndDate = event.target.value
+  displayLoading()
+  getGraphData()
+    .then(displayGraph)
+    .catch(displayError)
+}
+
 function reloadData() {
   localStorage.clear()
   window.location.reload()
@@ -63,9 +73,9 @@ function getGraphData() {
   const information = {
     method: 'POST',
     headers: {
-      'Content-Type': 'text/plain'
+      'Content-Type': 'application/json'
     },
-    body: cache.data
+    body: JSON.stringify({submissions: cache.data, endDate: modifiedEndDate })
   }
   return fetch(url, information).then(data => data.text())
 }
@@ -123,6 +133,7 @@ function populateDropdown(students) {
 }
 
 function displayStudentLine(event) {
+  modifiedEndDate = 'FALSE'
   hideDates()
   displayLoading()
   setCurrentStudent(event.target.value)

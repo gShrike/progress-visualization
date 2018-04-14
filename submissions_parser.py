@@ -3,8 +3,6 @@ import json
 import numpy as np
 from datetime import datetime, timedelta
 
-from constants import TOTAL_INTERVALS
-
 def group_student_completed_assessments(progress, submission):
     date = submission['date']
     name = submission['studentName']
@@ -22,13 +20,13 @@ def group_student_completed_assessments(progress, submission):
     if submission['didPass'] == 'TRUE' and assessment not in student['assessments']:
         student['assessments'][assessment] = date
 
-def group_student_assessment_into_intervals(students):
+def group_student_assessment_into_intervals(students, total_intervals):
     for name in students:
         progress_intervals = [] 
         student = students[name]
-        day_intervals = (student['end_date'] - student['start_date']).days / TOTAL_INTERVALS 
+        day_intervals = (student['end_date'] - student['start_date']).days / total_intervals 
         current_date = student['start_date']
-        for i in range(TOTAL_INTERVALS):
+        for _ in range(total_intervals):
             current_date = current_date + timedelta(days=day_intervals)
             if current_date >= datetime.now():
                 break
@@ -41,9 +39,9 @@ def group_student_assessment_into_intervals(students):
         del student['assessments']
         student['progress'] = progress_intervals
 
-def aggregate_student_intervals(students):
+def aggregate_student_intervals(students, total_intervals):
     intervals = []
-    for i in range(TOTAL_INTERVALS):
+    for i in range(total_intervals):
        interval = dict(median=0, iqr=0, q1=0, q3=0, min=0, max=0, completed_assessments=[]) 
        intervals.append(interval)
     for name in students:
@@ -62,11 +60,11 @@ def aggregate_student_intervals(students):
             interval['max'] = np.amax(assessments)
     students['intervals'] = intervals
 
-def parse_json(data):
-    submissions = json.loads(data.decode())
+def parse_json(submissions_string, intervals):
+    submissions = json.loads(submissions_string)
     progress = dict(students=dict(), invalid_records=[])
     for submission in submissions:
         group_student_completed_assessments(progress, submission)
-    group_student_assessment_into_intervals(progress['students'])
-    aggregate_student_intervals(progress['students'])
+    group_student_assessment_into_intervals(progress['students'], intervals)
+    aggregate_student_intervals(progress['students'], intervals)
     return progress
