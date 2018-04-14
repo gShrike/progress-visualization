@@ -20,7 +20,7 @@ nav {
   display: none;
 }
 
-.start-date, .end-date {
+.start-date, .end-date, .reset {
   display: none;
   padding-left: 1em;
 }

@@ -15,6 +15,7 @@ setUrlStudent()
 
 reloadButton.addEventListener('click', reloadData)
 endDatePicker.addEventListener('change', changeEndDate)
+document.querySelector('.reset button').addEventListener('click', hideResetButton)
 
 getSubmissions()
   .then(getGraphData)
@@ -38,17 +39,40 @@ function getSubmissions() {
     return fetch(SUBMISSIONS_URL)
       .then(data => data.json())
       .then(data => {
-        const compressed = LZString.compress(JSON.stringify(data.submissions));
+        const submissions = JSON.stringify(data.submissions)
+        const compressed = LZString.compress(submissions);
         cache = { data: compressed, date: new Date().toDateString() }
         displayDataDate(cache.date)
         localStorage.setItem('submissions', JSON.stringify(cache))
+        cache.data = submissions
       })
   }
 }
 
 function changeEndDate(event) {
-  modifiedEndDate = event.target.value
-  displayLoading()
+  const newDate = event.target.value
+  if (newDate) {
+    modifiedEndDate = newDate
+    student.endDate = modifiedEndDate
+    displayLoading()
+    getGraphData()
+      .then(displayGraph)
+      .then(showResetButton)
+      .catch(displayError)
+  }
+}
+
+function showResetButton() {
+  document.querySelector('.end-date').style.color = '#FF0054'
+  document.querySelector('.reset').style.display = 'inline'
+  document.querySelector('.reset span').innerHTML = `<strong>Original</strong>: ${student.originalEndDate}`
+}
+
+function hideResetButton() {
+  modifiedEndDate = 'FALSE'
+  student.endDate = student.originalEndDate
+  document.querySelector('.end-date').style.color = 'black'
+  document.querySelector('.reset').style.display = 'none'
   getGraphData()
     .then(displayGraph)
     .catch(displayError)
@@ -125,6 +149,8 @@ function populateDropdown(students) {
     option.setAttribute('value', JSON.stringify(currentStudent))
     if (student.fullName === currentStudent.fullName) {
       option.setAttribute('selected', '')
+      student = currentStudent
+      student.originalEndDate = student.endDate
       displayDates(currentStudent)
     }
     dropdown.appendChild(option)
@@ -152,6 +178,7 @@ function hideLoading() {
 
 function setCurrentStudent(selectedStudent) {
   student = selectedStudent === nonePlaceholder ? '' : JSON.parse(selectedStudent)
+  student.originalEndDate = student.endDate
   updateQueryStringParameter('student', student.fullName)
 }
 

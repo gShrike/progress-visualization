@@ -17,10 +17,11 @@ we want to be able to play with the end date to see if that puts them above the 
 
 ## V2
 
-- App pulls drill submissions from API rather than local file
+- App loads drill submissions from API rather than local file
 - Start and end date are now accurate from API 
-- Line size incremented
-- Line can be toggled by clicking on legend
-- Date picker added to predict student progress
+- Line size increased
+- Line can be toggled by clicking on the legend
+- Date picker added to adjust student progress
+- Extension tab removed
 
 ![demo](./static/demo.png)
