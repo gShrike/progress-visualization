@@ -18,10 +18,10 @@ endDatePicker.addEventListener('change', changeEndDate)
 document.querySelector('.reset button').addEventListener('click', hideResetButton)
 
 getSubmissions()
-  .then(getGraphData)
-  .then(displayGraph)
   .then(getStudents)
   .then(populateDropdown)
+  .then(getGraphData)
+  .then(displayGraph)
   .catch(displayError)
 
 function getSubmissions() {
@@ -94,12 +94,13 @@ function getGraphData() {
   if (student.fullName) {
     url = `${url}?student=${student.fullName}`
   }
+  const body = parse({submissions: JSON.parse(cache.data), student, modifiedEndDate })
   const information = {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({submissions: cache.data, endDate: modifiedEndDate })
+    body: JSON.stringify(body)
   }
   return fetch(url, information).then(data => data.text())
 }
@@ -113,7 +114,7 @@ function getStudents() {
         .filter(student => student.role === 'student')
         .filter(student => student.startDate && student.endDate)
         .map(({fullName, startDate, endDate}) => ({fullName, startDate, endDate}))
-        .sort((a, b) => a.fullName > b.fullName ? 1 : a.fullName < b. fullName ? -1 : 0)
+        .sort((a, b) => a.fullName > b.fullName ? 1 : a.fullName < b.fullName ? -1 : 0)
     })
 }
 

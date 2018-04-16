@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta
-
 import numpy as np
 import pandas as pd
 
@@ -36,13 +34,10 @@ def format_data(students):
             data['q3_scores'].append(interval['q3'])
             data['maximums'].append(interval['max'])
             data['minimums'].append(interval['min'])
-        for assessment_count in interval['completed_assessments']:
+        for assessment_count in interval['completedAssessments']:
             data['scatter_x'].append(category)
             data['scatter_y'].append(assessment_count)
     return data
-
-def get_student_data(student):
-    return list(map(lambda interval: len(interval['assessments']), student['progress']))
 
 def generate_figure(categories):
     hover = HoverTool(tooltips=[ ('Standards: ', '$y'), ])
@@ -82,29 +77,11 @@ def add_lines(plot, student, school):
     plot.legend.location = 'top_left'
     plot.legend.click_policy = 'hide'
 
-def get_line_information(data, students, name, end_date, total_intervals):
+def get_line_information(data, students):
     student = dict()
     school = dict()
 
-    if end_date == 'FALSE':
-        student['data'] = get_student_data(students[name])
-    else:
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        start_date = students[name]['start_date']
-        previous_end_date = students[name]['end_date']
-        progress_intervals = []
-        day_intervals = (end_date - start_date).days / total_intervals
-        current_date = start_date
-        for _ in range(total_intervals):
-            current_date = current_date + timedelta(days=day_intervals)
-            if current_date > datetime.now() or current_date > previous_end_date:
-                break
-            progress_intervals.append(dict(date=current_date, count=0))
-        for interval in students[name]['progress']:
-            for new_interval in progress_intervals:
-                if interval['date'] <= new_interval['date']:
-                    new_interval['count'] = len(interval['assessments'])
-        student['data'] = list(map(lambda interval: interval['count'], progress_intervals))
+    student['data'] = students['currentStudent']
     
     student['program'] = data['categories']
     student['program_to_date'] = data['categories'][:len(student['data'])]
@@ -121,7 +98,7 @@ def get_line_information(data, students, name, end_date, total_intervals):
 
     return student, school
 
-def draw(students, name, end_date, intervals):
+def draw(students):
     data = format_data(students) 
 
     boxplot = generate_figure(data['categories'])
@@ -145,8 +122,8 @@ def draw(students, name, end_date, intervals):
     tabs = [tab1, tab2]
 
     # draw student line
-    if name and name in students:
-        student, school = get_line_information(data, students, name, end_date, intervals)
+    if 'currentStudent' in students:
+        student, school = get_line_information(data, students)
 
         add_lines(boxplot, student, school)
         add_lines(scatterplot, student, school)
