@@ -9,7 +9,7 @@ const endDatePicker = document.querySelector('.end-date input')
 
 let student = {}
 let modifiedEndDate = 'FALSE'
-let cache
+let storedSubmissions
 
 setUrlStudent()
 
@@ -25,27 +25,33 @@ getSubmissions()
   .catch(displayError)
 
 function getSubmissions() {
-  const storedSubmissions = localStorage.getItem('submissions')
+  const submissionsKey = 'submissions'
+  storedSubmissions = retrieveData(submissionsKey)
   if (storedSubmissions) {
-    cache = JSON.parse(storedSubmissions)
-    displayDataDate(cache.date)
-    try {
-      cache.data = LZString.decompress(cache.data)
-      return Promise.resolve()
-    } catch(error) {
-      return Promise.reject(error)
-    }
+    displayDataDate(storedSubmissions.date)
+    return Promise.resolve()
   } else {
     return fetch(SUBMISSIONS_URL)
       .then(data => data.json())
       .then(data => {
-        const submissions = JSON.stringify(data.submissions)
-        const compressed = LZString.compress(submissions);
-        cache = { data: compressed, date: new Date().toDateString() }
-        displayDataDate(cache.date)
-        localStorage.setItem('submissions', JSON.stringify(cache))
-        cache.data = submissions
+        storedSubmissions = { data: data.submissions, date: new Date().toDateString() }
+        storeData(submissionsKey, storedSubmissions)
+        displayDataDate(storedSubmissions.date)
       })
+  }
+}
+
+function storeData(key, data) {
+  const cache = LZString.compress(JSON.stringify(data));
+  localStorage.setItem(key, cache)
+}
+
+function retrieveData(key) {
+  const data = localStorage.getItem(key)
+  if (!data) {
+    return undefined
+  } else {
+    return JSON.parse(LZString.decompress(data))
   }
 }
 
@@ -95,7 +101,7 @@ function getGraphData() {
   if (student.fullName) {
     url = `${url}?student=${student.fullName}`
   }
-  const body = parse({submissions: JSON.parse(cache.data), student, modifiedEndDate })
+  const body = parse({submissions: storedSubmissions.data, student, modifiedEndDate })
   const information = {
     method: 'POST',
     headers: {
@@ -107,16 +113,24 @@ function getGraphData() {
 }
 
 function getStudents() {
+  const studentListKey = 'students'
   loading.innerText = 'loading dropdown...'
-  return fetch(STUDENTS_URL)
-    .then(data => data.json())
-    .then(response => {
-      return response.students
-        .filter(student => student.role === 'student')
-        .filter(student => student.startDate && student.endDate)
-        .map(({fullName, startDate, endDate}) => ({fullName, startDate, endDate}))
-        .sort((a, b) => a.fullName > b.fullName ? 1 : a.fullName < b.fullName ? -1 : 0)
-    })
+  let studentList = retrieveData(studentListKey)
+  if (studentList) {
+    return studentList
+  } else {
+    return fetch(STUDENTS_URL)
+      .then(data => data.json())
+      .then(response => {
+        studentList = response.students
+          .filter(student => student.role === 'student')
+          .filter(student => student.startDate && student.endDate)
+          .map(({fullName, startDate, endDate}) => ({fullName, startDate, endDate}))
+          .sort((a, b) => a.fullName > b.fullName ? 1 : a.fullName < b.fullName ? -1 : 0)
+        storeData(studentListKey, studentList)
+        return studentList
+      })
+  }
 }
 
 function displayGraph(html) {
@@ -131,7 +145,6 @@ function displayGraph(html) {
 }
 
 function populateDropdown(students) {
-  hideLoading()
   const container = document.querySelector('.dropdown')
   const dropdown = document.createElement('select')
   const selectOption = document.createElement('option')
