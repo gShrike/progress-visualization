@@ -73,6 +73,7 @@ function hideResetButton() {
   student.endDate = student.originalEndDate
   document.querySelector('.end-date').style.color = 'black'
   document.querySelector('.reset').style.display = 'none'
+  displayLoading()
   getGraphData()
     .then(displayGraph)
     .catch(displayError)

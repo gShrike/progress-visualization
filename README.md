@@ -24,4 +24,9 @@ we want to be able to play with the end date to see if that puts them above the 
 - Date picker added to adjust student progress
 - Extension tab removed
 
+## Concerns
+
+- Withdrawned students are not taken into account
+  - the current stopping point is current or assigned end date
+
 ![demo](./static/demo.png)

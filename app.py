@@ -3,8 +3,6 @@ import os
 from flask import Flask, render_template, request, json, url_for
 from boxplot import draw
 
-from submissions_parser import parse_json
-
 PORT = 5000
 
 port = int(os.environ.get('PORT', PORT))
